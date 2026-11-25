@@ -77,7 +77,7 @@
         minute: '1'
         day: '1'
         month: '8'
-        job: "/usr/local/bin/cronic sh -c 'cd /var/opt/libcal-etl/; Y=$(/bin/date +\%Y); /var/opt/libcal-etl/libcal-etl update all --from \"$(( Y - 1 ))-07-01\" --to \"$Y-06-30\"'"
+        job: "/usr/local/bin/cronic sh -c 'cd /var/opt/libcal-etl/; Y=$(/bin/date +\\%Y); /var/opt/libcal-etl/libcal-etl update all --from \"$(( Y - 1 ))-07-01\" --to \"$Y-06-30\"'"
       become: yes
       become_user: '{{ user }}'
 
