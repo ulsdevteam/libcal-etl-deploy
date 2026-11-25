@@ -30,16 +30,17 @@
       become: yes
 
     - name: Download executable from github
-      get_url:
-        url: https://github.com/ulsdevteam/libcal-etl/releases/download/v1.2.0/libcal-etl
+      unarchive:
+        src: https://github.com/ulsdevteam/libcal-etl/releases/download/v2.0.0/libcal-etl-2_0_0.zip
         dest: '{{ app_folder }}/libcal-etl'
         owner: '{{ user }}'
         mode: '0770'
+        remote_src: true
       become: yes
 
     - name: Set environment variables
       lineinfile:
-        dest: '/home/{{ user }}/.profile'
+        dest: '{{ app_folder }}/libcal-etl/.env'
         state: present
         create: yes
         owner: '{{ user }}'
@@ -50,20 +51,33 @@
 
     - name: Schedule cron job for monthly (events and appointments) updates
       cron:
-        name: 'LibCal ETL - Update events and appointments'
+        name: 'LibCal ETL - Update events and appointments midpoint'
         hour: '4'
         minute: '0'
         day: '1'
-        job: "/usr/local/bin/cronic sh -c 'source ~/.profile; {{ app_folder }}/libcal-etl update events,appointments'"
+        month: '1'
+        job: "/usr/local/bin/cronic sh -c 'cd /var/opt/libcal-etl/; /var/opt/libcal-etl/libcal-etl update events,appointments'"
       become: yes
       become_user: '{{ user }}'
 
     - name: Schedule cron job for daily (spaces) updates
       cron:
-        name: 'LibCal ETL - Update spaces'
-        hour: '4'
-        minute: '0'
+        name: 'LibCal ETL - Update spaces monthly'
+        hour: '5'
+        minute: '30'
+        day: '1'
         job: "/usr/local/bin/cronic sh -c 'source ~/.profile; {{ app_folder }}/libcal-etl update spaces'"
+      become: yes
+      become_user: '{{ user }}'
+
+    - name: Schedule cron job for end-of-year updates
+      cron:
+        name: 'LibCal ETL - Update all after end of year'
+        hour: '4'
+        minute: '1'
+        day: '1'
+        month: '8'
+        job: "/usr/local/bin/cronic sh -c 'cd /var/opt/libcal-etl/; Y=$(/bin/date +\%Y); /var/opt/libcal-etl/libcal-etl update all --from \"$(( Y - 1 ))-07-01\" --to \"$Y-06-30\"'"
       become: yes
       become_user: '{{ user }}'
 
